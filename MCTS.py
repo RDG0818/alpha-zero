@@ -74,17 +74,18 @@ class MCTS():
 
         s = self.game.stringRepresentation(canonicalBoard)
 
+        # Checks if the current state is a terminal state and stores -1, 0, eps, or 1 in self.Es
         if s not in self.Es:
             self.Es[s] = self.game.getGameEnded(canonicalBoard, 1)
         if self.Es[s] != 0:
-            # terminal node
+            # terminal node, negating for other player
             return -self.Es[s]
 
-        if s not in self.Ps:
-            # leaf node
-            self.Ps[s], v = self.nnet.predict(canonicalBoard)
-            valids = self.game.getValidMoves(canonicalBoard, 1)
-            self.Ps[s] = self.Ps[s] * valids  # masking invalid moves
+        if s not in self.Ps: # LEAF NODE AND NOT VISITED
+            # "Rollout/Evaluation", finds the probability vector of actions and current evaluation of board state
+            self.Ps[s], v = self.nnet.predict(canonicalBoard) 
+            valids = self.game.getValidMoves(canonicalBoard, 1) # valids is a vector of 1 or 0 depending on if the state-action is valid
+            self.Ps[s] = self.Ps[s] * valids  # masking/removing invalid moves
             sum_Ps_s = np.sum(self.Ps[s])
             if sum_Ps_s > 0:
                 self.Ps[s] /= sum_Ps_s  # renormalize
@@ -98,10 +99,12 @@ class MCTS():
                 self.Ps[s] /= np.sum(self.Ps[s])
 
             self.Vs[s] = valids
-            self.Ns[s] = 0
+            self.Ns[s] = 0 # Initializing how many times s was visited
             return -v
 
-        valids = self.Vs[s]
+
+        # LEAF NODE AND PREVIOUSLY VISITED
+        valids = self.Vs[s] 
         cur_best = -float('inf')
         best_act = -1
 
@@ -109,8 +112,7 @@ class MCTS():
         for a in range(self.game.getActionSize()):
             if valids[a]:
                 if (s, a) in self.Qsa:
-                    u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (
-                            1 + self.Nsa[(s, a)])
+                    u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
                 else:
                     u = self.args.cpuct * self.Ps[s][a] * math.sqrt(self.Ns[s] + EPS)  # Q = 0 ?
 
