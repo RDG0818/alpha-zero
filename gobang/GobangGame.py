@@ -14,7 +14,7 @@ class GobangGame(Game):
     def getInitBoard(self):
         # return initial board (numpy board)
         b = Board(self.n)
-        return np.array(b.pieces)
+        return b.pieces
 
     def getBoardSize(self):
         # (a,b) tuple
@@ -103,23 +103,29 @@ class GobangGame(Game):
     @staticmethod
     def display(board):
         n = board.shape[0]
-
+        print()
+        print("    ", end='')
         for y in range(n):
-            print(y, "|", end="")
+            print(y//10, end=" ")
+        print()
+        print("    ", end='')
+        for y in range(n):
+            print(y%10, end=" ")
         print("")
-        print(" -----------------------")
+        print("   --------------------------------")
         for y in range(n):
-            print(y, "|", end="")    # print the row #
+            if y < 10: print(y, " |", end="")    # print the row #
+            else: print(y, "|", end="")
             for x in range(n):
                 piece = board[y][x]    # get the piece to print
                 if piece == -1:
-                    print("b ", end="")
+                    print("○ ", end="")
                 elif piece == 1:
-                    print("W ", end="")
+                    print("● ", end="")
                 else:
                     if x == n:
                         print("-", end="")
                     else:
                         print("- ", end="")
             print("|")
-        print("   -----------------------")
+        print("   --------------------------------")
